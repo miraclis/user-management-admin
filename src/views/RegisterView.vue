@@ -2,33 +2,40 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const title = 'Login'
+const title = 'Register'
 
 const email = ref('')
 const password = ref('')
 const error = ref('')
+const confirm_password = ref('')
 
 const router = useRouter()
 
-function login() {
-  if (email.value === '' || password.value === '' ) {
+function register() {
+  if (email.value === '' || password.value === '' || confirm_password.value === '') {
     error.value = 'Please fill in all fields'
+    return
+  }
+
+  if (password.value !== confirm_password.value) {
+    error.value = 'Passwords do not match'
     return
   }
 
   error.value = ''
 
-  console.log('Login success')
+  console.log('Register success')
   console.log('Email:', email.value)
   console.log('Password:', password.value)
+  console.log('Confirm Password:', confirm_password.value)
 
   router.push('/dashboard')
 }
 </script>
 
 <template>
-  <div class="login-page">
-    <div class="login-card">
+  <div class="register-page">
+    <div class="register-card">
       <h1>{{ title }}</h1>
 
       <input
@@ -43,8 +50,15 @@ function login() {
         placeholder="Password"
       />
 
-<button @click="login">
-  Sign in
+      
+      <input
+        v-model="confirm_password"
+        type="password"
+        placeholder="Confirm Password"
+      />
+
+<button @click="register">
+  Create account
 </button>
 
 <p v-if="error" class="error">
@@ -52,9 +66,9 @@ function login() {
 </p>
 
 <p class="register-text">
-  Don't have an account?
-  <RouterLink to="/register">
-    Register
+  Already have an account?
+  <RouterLink to="/login">
+    Sign in
   </RouterLink>
 </p>
 
@@ -66,7 +80,7 @@ function login() {
 * {
   box-sizing: border-box;
 }
-.login-page {
+.register-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -75,25 +89,25 @@ function login() {
 }
 
 
-.login-card {
+.register-card {
   width: 320px;
   padding: 24px;
   background: rgb(39, 29, 63);
   border-radius: 12px;
 }
 
-.login-card h1 {
+.register-card h1 {
   margin-bottom: 25px;
   color: #ece8e8;
 }
 
-.login-card input {
+.register-card input {
   width: 100%;
   padding: 10px;
   margin-bottom: 12px;
 }
 
-.login-card button {
+.register-card button {
   width: 100%;
   padding: 10px;
   cursor: pointer;
@@ -105,7 +119,7 @@ function login() {
 }
 
 .register-text {
-  font-size: 1px;
+  font-size: 12px;
 }
 
 </style>
