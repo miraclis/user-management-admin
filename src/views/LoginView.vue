@@ -43,9 +43,18 @@ function login() {
         placeholder="Password"
       />
 
+      
 <button @click="login">
   Sign in
 </button>
+
+
+<RouterLink
+  to="/forgot-password"
+  class="forgot-password-link"
+>
+  Forgot password?
+</RouterLink>
 
 <p v-if="error" class="error">
   {{ error }}
@@ -105,7 +114,15 @@ function login() {
 }
 
 .register-text {
-  font-size: 1px;
+  font-size: 12px;
+}
+
+.forgot-password-link {
+  font-size: 13px;
+}
+
+.register-text {
+  font-size: 13px;
 }
 
 </style>

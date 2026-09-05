@@ -119,7 +119,7 @@ function register() {
 }
 
 .register-text {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 </style>
