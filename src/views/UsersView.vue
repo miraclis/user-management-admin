@@ -1,5 +1,17 @@
+import { ref } from 'vue'
+
+
 <script setup lang="ts">
-const users = [
+import { ref } from 'vue'
+
+type User = {
+  id: number
+  email: string
+  role: 'admin' | 'user'
+  status: 'active' | 'inactive'
+}
+
+const users = ref<User[]>([
   {
     id: 1,
     email: 'admin@test.com',
@@ -18,9 +30,16 @@ const users = [
     role: 'user',
     status: 'inactive',
   },
-]
-</script>
+])
 
+function toggleUserStatus(user: User) {
+  if (user.status === 'active') {
+    user.status = 'inactive'
+  } else {
+    user.status = 'active'
+  }
+}
+</script>
 <template>
   <div class="users-page">
     <h1>Users</h1>
@@ -31,6 +50,7 @@ const users = [
           <th>Email</th>
           <th>Role</th>
           <th>Status</th>
+          <th>Action</th>
         </tr>
       </thead>
 
@@ -39,6 +59,12 @@ const users = [
           <td>{{ user.email }}</td>
           <td>{{ user.role }}</td>
           <td>{{ user.status }}</td>
+          <td>
+            <button @click="toggleUserStatus(user)">
+              {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
+            </button>
+          </td>
+          
         </tr>
       </tbody>
     </table>
