@@ -16,6 +16,10 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+    
 
 def get_db():
     db = SessionLocal()
@@ -54,6 +58,41 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
+@app.post("/login")
+def login(data: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(
+        models.User.email == data.email
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
+
+    if not password_hash.verify(data.password, user.password_hash):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+            
+    )
+
+    if user.status != "active":
+        raise HTTPException(
+          status_code=403,
+          detail="User is inactive"
+    
+    )
+    
+
+    return {
+        "message": "Login successful",
+        "id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "status": user.status,
+    }
+    
     return {
         "message": "User registered",
         "id": new_user.id,
@@ -61,3 +100,9 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
         "role": new_user.role,
         "status": new_user.status,
     }
+    
+    
+    
+    
+    
+    
