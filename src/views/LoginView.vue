@@ -10,17 +10,40 @@ const error = ref('')
 
 const router = useRouter()
 
-function login() {
-  if (email.value === '' || password.value === '' ) {
+const API_URL = import.meta.env.VITE_API_URL
+
+
+async function login() {
+  if (email.value === '' || password.value === '') {
     error.value = 'Please fill in all fields'
     return
   }
 
   error.value = ''
 
-  console.log('Login success')
-  console.log('Email:', email.value)
-  console.log('Password:', password.value)
+  console.log('API_URL:', API_URL)
+  
+  const response = await fetch(`${API_URL}/login`, {
+    method: 'POST',
+
+    headers: {
+      'Content-Type': 'application/json',
+    },
+
+    body: JSON.stringify({
+      email: email.value,
+      password: password.value,
+    }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    error.value = data.detail
+    return
+  }
+
+  localStorage.setItem('access_token', data.access_token)
 
   router.push('/dashboard')
 }

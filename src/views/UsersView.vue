@@ -1,8 +1,5 @@
-import { ref } from 'vue'
-
-
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 type User = {
   id: number
@@ -11,35 +8,49 @@ type User = {
   status: 'active' | 'inactive'
 }
 
-const users = ref<User[]>([
-  {
-    id: 1,
-    email: 'admin@test.com',
-    role: 'admin',
-    status: 'active',
-  },
-  {
-    id: 2,
-    email: 'user1@test.com',
-    role: 'user',
-    status: 'active',
-  },
-  {
-    id: 3,
-    email: 'user2@test.com',
-    role: 'user',
-    status: 'inactive',
-  },
-])
+const users = ref<User[]>([])
 
-function toggleUserStatus(user: User) {
-  if (user.status === 'active') {
-    user.status = 'inactive'
-  } else {
-    user.status = 'active'
-  }
+const API_URL = import.meta.env.VITE_API_URL
+
+async function loadUsers() {
+  const token = localStorage.getItem('access_token')
+
+  const response = await fetch(`${API_URL}/users`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  users.value = data
 }
+
+async function toggleUserStatus(user: User) {
+  const token = localStorage.getItem('access_token')
+
+  const response = await fetch(`${API_URL}/users/${user.id}/status`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    console.log(data.detail)
+    return
+  }
+
+  user.status = data.status
+}
+
+onMounted(() => {
+  loadUsers()
+})
 </script>
+
 <template>
   <div class="users-page">
     <h1>Users</h1>
