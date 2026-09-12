@@ -1,20 +1,42 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from pwdlib import PasswordHash
 from jose import jwt, JWTError
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
+
 import os
-from fastapi.middleware.cors import CORSMiddleware
+import resend
 import models
+
 from database import SessionLocal
 
 
-app = FastAPI()
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+    
+    
+    
 
+load_dotenv()
+
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
+
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+resend.api_key = RESEND_API_KEY
+
+
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,13 +46,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
-load_dotenv()
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 password_hash = PasswordHash.recommended()
 security = HTTPBearer()
@@ -44,6 +59,10 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
 
 
 def get_db():
@@ -68,6 +87,27 @@ def create_access_token(data: dict):
 
     return jwt.encode(
         to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+
+def create_reset_token(user_id: int):
+    data = {
+        "sub": str(user_id),
+        "type": "password_reset"
+    }
+
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=15
+    )
+
+    data.update({
+        "exp": expire
+    })
+
+    return jwt.encode(
+        data,
         SECRET_KEY,
         algorithm=ALGORITHM
     )
@@ -208,13 +248,49 @@ def login(
         "access_token": access_token,
         "token_type": "bearer"
     }
-    
-    
-    
+
+
+@app.post("/forgot-password")
+def forgot_password(
+    data: ForgotPasswordRequest,
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(
+        models.User.email == data.email
+    ).first()
+
+    if not user:
+        return {
+            "message": "If this email exists, a reset link was sent"
+        }
+
+    reset_token = create_reset_token(user.id)
+
+    reset_link = (
+        f"{FRONTEND_URL}/reset-password?token={reset_token}"
+    )
+
+    resend.Emails.send({
+        "from": "onboarding@resend.dev",
+        "to": [user.email],
+        "subject": "Reset your password",
+        "html": f"""
+            <p>Click the link below to reset your password:</p>
+            <a href="{reset_link}">
+                Reset password
+            </a>
+        """
+    })
+
+    return {
+        "message": "If this email exists, a reset link was sent"
+    }
+
+
 @app.patch("/users/{user_id}/status")
 def change_user_status(
     user_id: int,
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     if current_user.role != "admin":
@@ -246,11 +322,11 @@ def change_user_status(
         "email": user.email,
         "status": user.status
     }
-    
-    
+
+
 @app.get("/users")
 def get_users(
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     if current_user.role != "admin":
@@ -270,3 +346,56 @@ def get_users(
         }
         for user in users
     ]
+    
+    
+@app.post("/reset-password")
+def reset_password(
+    data: ResetPasswordRequest,
+    db: Session = Depends(get_db)
+):
+    try:
+        payload = jwt.decode(
+            data.token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        if payload.get("type") != "password_reset":
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid reset token"
+            )
+
+        user_id = payload.get("sub")
+
+        if user_id is None:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid reset token"
+            )
+
+    except JWTError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired reset token"
+        )
+
+    user = db.query(models.User).filter(
+        models.User.id == int(user_id)
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    user.password_hash = password_hash.hash(
+        data.new_password
+    )
+
+    db.commit()
+
+    return {
+        "message": "Password reset successful"
+    }

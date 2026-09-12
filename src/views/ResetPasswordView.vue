@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const API_URL = import.meta.env.VITE_API_URL
+
+const route = useRoute()
+const router = useRouter()
 
 const password = ref('')
 const confirmPassword = ref('')
 const error = ref('')
 const message = ref('')
 
-function resetPassword() {
+async function resetPassword() {
   if (password.value === '' || confirmPassword.value === '') {
     error.value = 'Please fill in all fields'
     message.value = ''
@@ -19,8 +25,40 @@ function resetPassword() {
     return
   }
 
+  const token = route.query.token
+
+  if (!token || typeof token !== 'string') {
+    error.value = 'Invalid reset link'
+    message.value = ''
+    return
+  }
+
   error.value = ''
-  message.value = 'Password changed successfully'
+  message.value = ''
+
+  const response = await fetch(`${API_URL}/reset-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      token: token,
+      new_password: password.value,
+    }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    error.value = data.detail || 'Something went wrong'
+    return
+  }
+
+  message.value = data.message
+
+  setTimeout(() => {
+    router.push('/login')
+  }, 1500)
 }
 </script>
 

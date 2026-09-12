@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+
+const API_URL = import.meta.env.VITE_API_URL
+
 const title = 'Register'
 
 const email = ref('')
@@ -11,8 +14,12 @@ const confirm_password = ref('')
 
 const router = useRouter()
 
-function register() {
-  if (email.value === '' || password.value === '' || confirm_password.value === '') {
+async function register() {
+  if (
+    email.value === '' ||
+    password.value === '' ||
+    confirm_password.value === ''
+  ) {
     error.value = 'Please fill in all fields'
     return
   }
@@ -24,13 +31,27 @@ function register() {
 
   error.value = ''
 
-  console.log('Register success')
-  console.log('Email:', email.value)
-  console.log('Password:', password.value)
-  console.log('Confirm Password:', confirm_password.value)
+  const response = await fetch(`${API_URL}/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: email.value,
+      password: password.value,
+    }),
+  })
 
-  router.push('/dashboard')
+  const data = await response.json()
+
+  if (!response.ok) {
+    error.value = data.detail
+    return
+  }
+
+  router.push('/login')
 }
+
 </script>
 
 <template>
@@ -85,20 +106,21 @@ function register() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: #f9ffb5b9;
 }
 
 
 .register-card {
   width: 320px;
   padding: 24px;
-  background: rgb(39, 29, 63);
-  border-radius: 12px;
+  background: rgb(39, 39, 39);
+  border-radius: 4px;
 }
 
 .register-card h1 {
-  margin-bottom: 25px;
-  color: #ece8e8;
+  margin-bottom: 32px;
+  color: #e9e9e7;
+  font-size: 52px;
 }
 
 .register-card input {

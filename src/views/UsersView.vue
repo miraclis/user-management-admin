@@ -79,5 +79,83 @@ onMounted(() => {
         </tr>
       </tbody>
     </table>
+
+    <RouterLink to="/dashboard" class="back-button">
+  Back to Dashboard
+</RouterLink>
+
   </div>
 </template>
+
+<style scoped>
+.users-page {
+  min-height: 100vh;
+  padding: 40px;
+  background: #f9ffb5b9;
+  color: #1f1f1f;
+}
+
+.users-page h1 {
+  margin-bottom: 30px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f9ffb5b9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+
+th,
+td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+th {
+  background: rgb(39, 39, 39);
+  color: white;
+  font-weight: 600;
+}
+
+td {
+  color: #444;
+}
+
+
+button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #272727;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #404040;
+}
+
+.back-button {
+  display: inline-block;
+  margin-top: 30px;
+  padding: 10px 16px;
+
+  background: #525050;
+  color: white;
+
+  text-decoration: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.back-button:hover {
+  background: #404040;
+}
+
+
+</style>
+

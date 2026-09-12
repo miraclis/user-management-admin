@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+const API_URL = import.meta.env.VITE_API_URL
 const email = ref('')
 const message = ref('')
 const error = ref('')
 
-function sendResetLink() {
+async function sendResetLink() {
   if (email.value === '') {
     error.value = 'Please enter your email'
     message.value = ''
@@ -13,7 +14,26 @@ function sendResetLink() {
   }
 
   error.value = ''
-  message.value = 'Reset link sent'
+  message.value = ''
+
+  const response = await fetch(`${API_URL}/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: email.value,
+    }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    error.value = data.detail || 'Something went wrong'
+    return
+  }
+
+  message.value = data.message
 }
 </script>
 
@@ -57,19 +77,20 @@ function sendResetLink() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: #f9ffb5b9;
 }
 
 .forgot-card {
   width: 320px;
   padding: 24px;
-  background: rgb(39, 29, 63);
-  border-radius: 12px;
+  background: rgb(39, 39, 39);
+  border-radius: 4px;
 }
 
 .forgot-card h1 {
-  color: #ece8e8;
- line-height: 0.8;
+  color: #e9e9e7;
+  font-size: 52px;
+  line-height: 0.8;
 }
 
 .forgot-card input {

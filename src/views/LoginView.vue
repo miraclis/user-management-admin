@@ -103,20 +103,21 @@ async function login() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: #f9ffb5b9;
 }
 
 
 .login-card {
   width: 320px;
   padding: 24px;
-  background: rgb(39, 29, 63);
-  border-radius: 12px;
+  background: rgb(39, 39, 39);
+  border-radius: 4px;
 }
 
 .login-card h1 {
-  margin-bottom: 25px;
-  color: #ece8e8;
+  margin-bottom: 32px;
+  color: #e9e9e7;
+  font-size: 52px;
 }
 
 .login-card input {
